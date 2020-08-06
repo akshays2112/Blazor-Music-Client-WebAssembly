@@ -1,0 +1,171 @@
+﻿@page "/Spotify/spotifyplaylists"
+@using SpotifyApi.NetCore
+@using System.ComponentModel.DataAnnotations
+@inject IPlaylistsApi playlistsApi
+@inject IUsersProfileApi usersApi
+@inject IFollowApi followApi
+<h3>Spotify List Playlists</h3>
+
+@testOutput
+
+<EditForm Model="@searchForArtistOrSong" OnValidSubmit="@SearchForArtists">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        Search for Artist or Song
+        <InputText @bind-Value="@searchForArtistOrSong.SearchString" />
+    </div>
+    <button type="submit" class="btn btn-primary">Find Artist or Song</button>
+</EditForm>
+<hr />
+
+<button @onclick="@GetFollowingArtists">Get Following</button>
+<br />
+@if (isFollowingArtist != null)
+{
+    foreach (bool b in isFollowingArtist)
+    {
+        @b
+        <br />
+    }
+}
+
+<hr />
+
+<button @onclick="@GetFollowingPlaylist">Get Following</button>
+<br />
+@if (isFollowingPlaylist != null)
+{
+    foreach (bool b in isFollowingPlaylist)
+    {
+        @b
+        <br />
+    }
+}
+
+<hr />
+<button @onclick="@GetPlaylists">Get Spotify Playlists</button>
+<br />
+@foreach (UserPlaylist userPlaylist in userPlayLists)
+{
+    <div>Playlist Name:: @userPlaylist.Name Total:: @userPlaylist.Total Playlist Id: @userPlaylist.Id </div>
+    <table>
+        <thead>
+            <tr>
+                <th>
+                    Index
+                </th>
+                <th>
+                    Song Name
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (userPlaylist.UserPlaylistTracks != null)
+            {
+                foreach (UserPlaylist.UserPlaylistTrack track in userPlaylist.UserPlaylistTracks)
+                {
+                    <tr>
+                        <td>
+                            @track.Index
+                        </td>
+                        <td>
+                            @track.Name
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    class SearchForArtistOrSong
+    {
+        [Required]
+        public string SearchString { get; set; }
+    }
+
+    List<UserPlaylist> userPlayLists = new List<UserPlaylist>();
+
+    SearchForArtistOrSong searchForArtistOrSong = new SearchForArtistOrSong();
+
+    string testOutput;
+
+    bool[] isFollowingArtist;
+
+    bool[] isFollowingPlaylist;
+
+    async Task GetPlaylists()
+    {
+        string spotifyAccessToken = Program.SpotifyAccessToken?.access_token;
+        if (!string.IsNullOrWhiteSpace(spotifyAccessToken))
+        {
+            try
+            {
+                User user = await usersApi.GetCurrentUsersProfile(spotifyAccessToken);
+                PlaylistsSearchResult playlistsSearchResult = await playlistsApi.GetPlaylists(user.Id, spotifyAccessToken);
+                foreach (PlaylistSimplified playlistSimplified in playlistsSearchResult.Items)
+                {
+                    int counter = 0;
+                    int indexCounter = 1;
+                    UserPlaylist userPlaylist = new UserPlaylist(playlistSimplified.Name, playlistSimplified.Tracks.Total, playlistSimplified.Id);
+                    userPlayLists.Add(userPlaylist);
+                    while (counter < userPlaylist.Total)
+                    {
+                        PlaylistPaged playlistPaged;
+                        try
+                        {
+                            playlistPaged = await playlistsApi.GetTracks(playlistSimplified.Id, spotifyAccessToken, limit: 100, offset: counter);
+                            foreach (PlaylistTrack playlistTrack in playlistPaged.Items)
+                            {
+                                userPlaylist.UserPlaylistTracks.Add(new UserPlaylist.UserPlaylistTrack(playlistTrack.Track.Name, indexCounter++));
+                            }
+                            counter += playlistPaged.Items.Length;
+                        }
+                        catch (System.Net.Http.HttpRequestException ex)
+                        {
+                            testOutput = $"PlaylistsApi.GetTracks() threw the following message {ex.Message}";
+                        }
+                    }
+                }
+            }
+            catch (System.Net.Http.HttpRequestException ex)
+            {
+                testOutput = $"PlaylistsApi.GetPlaylists() the following message {ex.Message}";
+            }
+        }
+    }
+
+    void SearchForArtists()
+    {
+        testOutput = $"You tried to search for {searchForArtistOrSong.SearchString}";
+    }
+
+    async Task GetFollowingArtists()
+    {
+        try
+        {
+            isFollowingArtist = await followApi.CheckCurrentUserFollowsArtists(
+                new string[] { "74ASZWbe4lXaubB36ztrGX" }, Program.SpotifyAccessToken?.access_token);
+        }
+        catch (System.Net.Http.HttpRequestException ex)
+        {
+            testOutput = $"FollowApi.GetCurrentUsersProfile() the following message {ex.Message}";
+        }
+    }
+
+    async Task GetFollowingPlaylist()
+    {
+        try
+        {
+            isFollowingPlaylist = await followApi.CheckUsersFollowPlaylist("2v3iNvBX8Ay1Gt2uXtUKUT",
+                new string[] { "possan", "elogain" }, Program.SpotifyAccessToken?.access_token);
+        }
+        catch (System.Net.Http.HttpRequestException ex)
+        {
+            testOutput = $"FollowApi.GetCurrentUsersProfile() the following message {ex.Message}";
+        }
+    }
+}

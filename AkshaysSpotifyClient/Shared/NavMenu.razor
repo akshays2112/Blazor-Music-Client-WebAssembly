@@ -1,0 +1,147 @@
+﻿@using Newtonsoft.Json
+@using System.Net.Http.Headers
+@using System.Text
+@using System.Text.RegularExpressions
+@using System.Net
+@inject NavigationManager navMgr
+<div class="top-row pl-4 navbar navbar-dark">
+    <a class="navbar-brand" href="">Akshay's Spotify Client</a>
+    <button class="navbar-toggler" @onclick="ToggleNavMenu">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+</div>
+
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+    <ul class="nav flex-column">
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="oi oi-home" aria-hidden="true"></span> Home
+            </NavLink>
+        </li>
+        @if (!string.IsNullOrWhiteSpace(Program.SpotifyAccessToken?.access_token) &&
+            !string.IsNullOrWhiteSpace(Program.GoogleApisYoutubeAccessToken?.access_token))
+        {
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="Spotify/spotifyplaylists">
+                    <span class="oi oi-plus" aria-hidden="true"></span> Spotify Playlists
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="Youtube/youtubeplaylists">
+                    <span class="oi oi-plus" aria-hidden="true"></span> Youtube Playlists
+                </NavLink>
+            </li>
+        }
+        @if (string.IsNullOrWhiteSpace(Program.SpotifyAccessToken?.access_token))
+        {
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" @onclick="@GetSpotifyToken">
+                    <span class="oi oi-plus" aria-hidden="true"></span> Login to Spotify
+                </NavLink>
+            </li>
+        }
+        else if (string.IsNullOrWhiteSpace(Program.GoogleApisYoutubeAccessToken?.access_token))
+        {
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" @onclick="@GetGoogleApisYoutubeToken">
+                    <span class="oi oi-plus" aria-hidden="true"></span> Login to Youtube
+                </NavLink>
+            </li>
+        }
+    </ul>
+</div>
+@code {
+    private bool collapseNavMenu = true;
+
+    private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    HttpClient httpClient = new HttpClient { BaseAddress = new Uri(Program.BaseHostUriString) };
+
+    void GetSpotifyToken()
+    {
+        if (string.IsNullOrWhiteSpace(Program.SpotifyAccessToken?.access_token))
+        {
+            string clientId = "Put your Spotify Api Client ID string  in here";
+            string scopes = WebUtility.UrlEncode("user-read-playback-position user-read-email user-library-read user-top-read playlist-modify-public user-follow-read user-read-playback-state user-modify-playback-state user-read-private playlist-read-private user-library-modify playlist-read-collaborative playlist-modify-private user-follow-modify user-read-currently-playing user-read-recently-played");
+            string redirectUri = WebUtility.UrlEncode(httpClient.BaseAddress.ToString());
+
+            navMgr.NavigateTo($"https://accounts.spotify.com/authorize?response_type=code&client_id={clientId}&scope={scopes}&redirect_uri={redirectUri}", true);
+        }
+    }
+
+    void GetGoogleApisYoutubeToken()
+    {
+        if (string.IsNullOrWhiteSpace(Program.GoogleApisYoutubeAccessToken?.access_token)) {
+            string clientId = "Put your GoogleApis Youtube Client ID string in here";
+            string scopes = WebUtility.UrlEncode("https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.channel-memberships.creator https://www.googleapis.com/auth/youtube.force-ssl https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtubepartner https://www.googleapis.com/auth/youtubepartner-channel-audit");
+            string baseUriString = httpClient.BaseAddress.ToString();
+            string redirectUri = WebUtility.UrlEncode(baseUriString.Substring(0, baseUriString.Length - 1));
+            string stateUri = WebUtility.UrlEncode(Program.SpotifyAccessToken.access_token);
+            string finalStateUri = !string.IsNullOrWhiteSpace(stateUri) ? $"&state={stateUri}" : "";
+
+            navMgr.NavigateTo($"https://accounts.google.com/o/oauth2/v2/auth?client_id={clientId}&redirect_uri={redirectUri}&response_type=token{finalStateUri}&scope={scopes}", true);
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        string queryString = navMgr.ToAbsoluteUri(navMgr.Uri).Query;
+        if (!string.IsNullOrWhiteSpace(queryString) && queryString.StartsWith("?code=") && queryString.Length > 6 &&
+                    string.IsNullOrWhiteSpace(Program.SpotifyAccessToken?.access_token))
+        {
+            string clientId = "Put your Spotify Client ID string in here";
+            string clientSecret = "Put your Spotify Client Secret string in here";
+            string credentials = String.Format("{0}:{1}", clientId, clientSecret);
+
+            httpClient.DefaultRequestHeaders.Accept.Clear();
+            httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.UTF8.GetBytes(credentials)));
+
+            //Prepare Request Body
+            List<KeyValuePair<string, string>> requestData = new List<KeyValuePair<string, string>>();
+            requestData.Add(new KeyValuePair<string, string>("grant_type", "authorization_code"));
+            requestData.Add(new KeyValuePair<string, string>("code", queryString.Substring(6)));
+            requestData.Add(new KeyValuePair<string, string>("redirect_uri", httpClient.BaseAddress.ToString()));
+
+            FormUrlEncodedContent requestBody = new FormUrlEncodedContent(requestData);
+
+            //Request Token
+            var request = await httpClient.PostAsync("https://accounts.spotify.com/api/token", requestBody);
+            var response = await request.Content.ReadAsStringAsync();
+            Program.SpotifyAccessToken = JsonConvert.DeserializeObject<SpotifyAccessToken>(response);
+        }
+        else if (navMgr.Uri.ToString().StartsWith(httpClient.BaseAddress.ToString() + "#") &&
+            string.IsNullOrWhiteSpace(Program.GoogleApisYoutubeAccessToken?.access_token))
+        {
+            Program.GoogleApisYoutubeAccessToken = new GoogleApisYoutubeAccessToken();
+            string regexStr;
+            bool hasState = false;
+            if (navMgr.Uri.ToString().StartsWith(httpClient.BaseAddress.ToString() + "#state="))
+            {
+                hasState = true;
+                regexStr = httpClient.BaseAddress.ToString() + "#state=(?<State>[^&]+)&access_token=(?<AccessToken>[^&]+)&token_type=(?<TokenType>[^&]+)&expires_in=(?<ExpiresIn>[^&]+).*";
+            }
+            else
+            {
+                regexStr = httpClient.BaseAddress.ToString() + "#access_token=(?<AccessToken>[^&]+)&token_type=(?<TokenType>[^&]+)&expires_in=(?<ExpiresIn>[^&]+).*";
+            }
+            Regex regex = new Regex(regexStr);
+            Match match = regex.Match(navMgr.Uri.ToString());
+            Program.GoogleApisYoutubeAccessToken.access_token = WebUtility.UrlDecode(match.Groups["AccessToken"].Value);
+            Program.GoogleApisYoutubeAccessToken.token_type = WebUtility.UrlDecode(match.Groups["TokenType"].Value);
+            Program.GoogleApisYoutubeAccessToken.expires_in = long.Parse(WebUtility.UrlDecode(match.Groups["ExpiresIn"].Value));
+            if (hasState)
+            {
+                Program.SpotifyAccessToken = new SpotifyAccessToken();
+                Program.SpotifyAccessToken.access_token = WebUtility.UrlDecode(match.Groups["State"].Value);
+            }
+        }
+        await base.OnInitializedAsync();
+    }
+}

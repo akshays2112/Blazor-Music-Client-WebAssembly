@@ -1,0 +1,61 @@
+﻿@page "/Youtube/youtubeplaylists"
+@using Newtonsoft.Json
+@using System.Net
+
+<h3>YoutubeListPlaylists</h3>
+
+@if (myPlaylists?.Count > 0)
+{
+    foreach (MyPlaylist myPlaylist in myPlaylists)
+    {
+        <b> @myPlaylist.Title :: @myPlaylist.Count :: @myPlaylist.ID </b> <br />
+    }
+}
+@code {
+    List<MyPlaylist> myPlaylists { get; set; }
+    string youtubeAccessToken;
+    HttpClient httpClient = new HttpClient { BaseAddress = new Uri("https://localhost:44384/") };
+
+    async Task<YoutubePlaylist> GetYoutubePlaylists<YoutubePlaylist>(string nextPageToken = null)
+    {
+        string part = WebUtility.UrlEncode("snippet,contentDetails");
+        string pageToken = !string.IsNullOrWhiteSpace(nextPageToken) ? $"&page_token={nextPageToken}" : "";
+
+        var builder = new UriBuilder($"https://www.googleapis.com/youtube/v3/playlists?access_token={youtubeAccessToken}&part={part}&mine=true&maxResults=50{pageToken}");
+
+        HttpResponseMessage request = await httpClient.GetAsync(builder.Uri);
+        string response = await request.Content.ReadAsStringAsync();
+        return JsonConvert.DeserializeObject<YoutubePlaylist>(response);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(Program.GoogleApisYoutubeAccessToken?.access_token))
+        {
+            myPlaylists = new List<MyPlaylist>();
+            youtubeAccessToken = Program.GoogleApisYoutubeAccessToken.access_token;
+            string nextPageToken = await AddMyPlaylist();
+            while (!string.IsNullOrWhiteSpace(nextPageToken))
+            {
+                nextPageToken = await AddMyPlaylist(nextPageToken);
+            }
+        }
+
+        await base.OnInitializedAsync();
+    }
+
+    async Task<string> AddMyPlaylist(string nextPageToken = null)
+    {
+        YoutubePlaylist youtubePlaylist = await GetYoutubePlaylists<YoutubePlaylist>(nextPageToken);
+        if (youtubePlaylist?.Items?.Length > 0)
+        {
+            foreach (Item item in youtubePlaylist.Items)
+            {
+                MyPlaylist myPlaylist = new MyPlaylist(item.Snippet.Title, item.Id, item.ContentDetails.ItemCount);
+                myPlaylists.Add(myPlaylist);
+            }
+            return youtubePlaylist.NextPageToken;
+        }
+        return null;
+    }
+}
