@@ -3,7 +3,7 @@
 @using System.Text
 @using System.Text.RegularExpressions
 @using System.Net
-@inject NavigationManager navMgr
+@inject NavigationManager myNavMgr 
 <div class="top-row pl-4 navbar navbar-dark">
     <a class="navbar-brand" href="">Akshay's Spotify Client</a>
     <button class="navbar-toggler" @onclick="ToggleNavMenu">
@@ -22,13 +22,8 @@
             !string.IsNullOrWhiteSpace(Program.GoogleApisYoutubeAccessToken?.access_token))
         {
             <li class="nav-item px-3">
-                <NavLink class="nav-link" href="Spotify/spotifyplaylists">
-                    <span class="oi oi-plus" aria-hidden="true"></span> Spotify Playlists
-                </NavLink>
-            </li>
-            <li class="nav-item px-3">
-                <NavLink class="nav-link" href="Youtube/youtubeplaylists">
-                    <span class="oi oi-plus" aria-hidden="true"></span> Youtube Playlists
+                <NavLink class="nav-link" href="/transfersongsfromyoutubetospotify">
+                    <span class="oi oi-plus" aria-hidden="true"></span> Transfer Songs
                 </NavLink>
             </li>
         }
@@ -60,7 +55,7 @@
         collapseNavMenu = !collapseNavMenu;
     }
 
-    HttpClient httpClient = new HttpClient { BaseAddress = new Uri(Program.BaseHostUriString) };
+    HttpClient httpClient = new HttpClient { BaseAddress = new Uri("https://localhost:44384/") };
 
     void GetSpotifyToken()
     {
@@ -70,7 +65,7 @@
             string scopes = WebUtility.UrlEncode("user-read-playback-position user-read-email user-library-read user-top-read playlist-modify-public user-follow-read user-read-playback-state user-modify-playback-state user-read-private playlist-read-private user-library-modify playlist-read-collaborative playlist-modify-private user-follow-modify user-read-currently-playing user-read-recently-played");
             string redirectUri = WebUtility.UrlEncode(httpClient.BaseAddress.ToString());
 
-            navMgr.NavigateTo($"https://accounts.spotify.com/authorize?response_type=code&client_id={clientId}&scope={scopes}&redirect_uri={redirectUri}", true);
+            myNavMgr.NavigateTo($"https://accounts.spotify.com/authorize?response_type=code&client_id={clientId}&scope={scopes}&redirect_uri={redirectUri}", true);
         }
     }
 
@@ -84,13 +79,13 @@
             string stateUri = WebUtility.UrlEncode(Program.SpotifyAccessToken.access_token);
             string finalStateUri = !string.IsNullOrWhiteSpace(stateUri) ? $"&state={stateUri}" : "";
 
-            navMgr.NavigateTo($"https://accounts.google.com/o/oauth2/v2/auth?client_id={clientId}&redirect_uri={redirectUri}&response_type=token{finalStateUri}&scope={scopes}", true);
+            myNavMgr.NavigateTo($"https://accounts.google.com/o/oauth2/v2/auth?client_id={clientId}&redirect_uri={redirectUri}&response_type=token{finalStateUri}&scope={scopes}", true);
         }
     }
 
     protected override async Task OnInitializedAsync()
     {
-        string queryString = navMgr.ToAbsoluteUri(navMgr.Uri).Query;
+        string queryString = myNavMgr.ToAbsoluteUri(myNavMgr.Uri).Query;
         if (!string.IsNullOrWhiteSpace(queryString) && queryString.StartsWith("?code=") && queryString.Length > 6 &&
                     string.IsNullOrWhiteSpace(Program.SpotifyAccessToken?.access_token))
         {
@@ -116,13 +111,13 @@
             var response = await request.Content.ReadAsStringAsync();
             Program.SpotifyAccessToken = JsonConvert.DeserializeObject<SpotifyAccessToken>(response);
         }
-        else if (navMgr.Uri.ToString().StartsWith(httpClient.BaseAddress.ToString() + "#") &&
+        else if (myNavMgr.Uri.ToString().StartsWith(httpClient.BaseAddress.ToString() + "#") &&
             string.IsNullOrWhiteSpace(Program.GoogleApisYoutubeAccessToken?.access_token))
         {
             Program.GoogleApisYoutubeAccessToken = new GoogleApisYoutubeAccessToken();
             string regexStr;
             bool hasState = false;
-            if (navMgr.Uri.ToString().StartsWith(httpClient.BaseAddress.ToString() + "#state="))
+            if (myNavMgr.Uri.ToString().StartsWith(httpClient.BaseAddress.ToString() + "#state="))
             {
                 hasState = true;
                 regexStr = httpClient.BaseAddress.ToString() + "#state=(?<State>[^&]+)&access_token=(?<AccessToken>[^&]+)&token_type=(?<TokenType>[^&]+)&expires_in=(?<ExpiresIn>[^&]+).*";
@@ -132,7 +127,7 @@
                 regexStr = httpClient.BaseAddress.ToString() + "#access_token=(?<AccessToken>[^&]+)&token_type=(?<TokenType>[^&]+)&expires_in=(?<ExpiresIn>[^&]+).*";
             }
             Regex regex = new Regex(regexStr);
-            Match match = regex.Match(navMgr.Uri.ToString());
+            Match match = regex.Match(myNavMgr.Uri.ToString());
             Program.GoogleApisYoutubeAccessToken.access_token = WebUtility.UrlDecode(match.Groups["AccessToken"].Value);
             Program.GoogleApisYoutubeAccessToken.token_type = WebUtility.UrlDecode(match.Groups["TokenType"].Value);
             Program.GoogleApisYoutubeAccessToken.expires_in = long.Parse(WebUtility.UrlDecode(match.Groups["ExpiresIn"].Value));

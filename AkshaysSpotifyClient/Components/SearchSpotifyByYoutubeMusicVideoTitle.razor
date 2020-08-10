@@ -1,0 +1,66 @@
+﻿@using SpotifyApi.NetCore
+@inject ISearchApi searchApi
+@if (searchTracks.Count > 0)
+{
+    <span title="Expand or Collapse">
+        <svg onclick="clickSvg('#@svgPathID')" width="34" height="34" transform="scale(0.735 0.735)" data-toggle="collapse" data-target="#@divID">
+            <circle cx="17" cy="17" r="15" stroke="white" stroke-width="4" fill="none" />
+            <path id="@svgPathID" d="M17 28 L8 18 L14 18 L14 8 L20 8 L20 18 L26 18 Z" fill="white" />
+            Sorry, your browser does not support inline SVG.
+        </svg>
+    </span>
+}
+Youtube Video Title :: @YoutubePlaylistItem.Title
+<br />
+<div class="d-flex">
+    <span title="Search for songs on Spotify whose names match the text in the textbox">
+        <svg @onclick="@SearchSpotifyByTitle" fill="#FFFFFF" width="34" height="34">
+            <path fill="none" stroke="#FFFFFF" stroke-miterlimit="10" stroke-width="2" d="M13 4A9 9 0 1 0 13 22A9 9 0 1 0 13 4Z" />
+            <path fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M26 26L19.437 19.437" />
+            Sorry, your browser does not support inline SVG.
+        </svg>
+    </span>
+    <input class="flex-grow-1" type="text" @bind-value="@YoutubePlaylistItem.CleanedUpTitle" style="border-radius: 5px; background: #73AD21; padding: 5px;" />
+</div>
+@if (searchTracks.Count > 0)
+{
+    <div id="@divID" class="collapse show" style="margin-left:60px;">
+        <table class="table table-dark">
+            @foreach (CustomTrack track in searchTracks)
+            {
+                <tr>
+                    <td>
+                        <SpotifyTrack Track="@track" SpotifyUserPlayLists="@SpotifyUserPlayLists" />
+                    </td>
+                </tr>
+            }
+        </table>
+    </div>
+}
+@code {
+    [Parameter]
+    public MyPlaylist.MyPlayListItem YoutubePlaylistItem { get; set; }
+
+    [Parameter]
+    public List<UserPlaylist> SpotifyUserPlayLists { get; set; }
+
+    List<CustomTrack> searchTracks = new List<CustomTrack>();
+
+    string divID = $"divID{(Program.DivIndex++).ToString()}";
+    string svgPathID = $"svgPathID{(Program.DivIndex++).ToString()}";
+
+    async Task SearchSpotifyByTitle()
+    {
+        searchTracks.Clear();
+        SearchResult searchResult = await searchApi.Search(YoutubePlaylistItem.CleanedUpTitle, "track", "US", 50, 0, Program.SpotifyAccessToken.access_token);
+        foreach (Track track in searchResult.Tracks.Items)
+        {
+            CustomTrack customTrack = new CustomTrack(track.Name, track.Id);
+            searchTracks.Add(customTrack);
+            foreach (Artist artist in track.Artists)
+            {
+                customTrack.Artists.Add(new CustomTrack.CustomArtist(artist.Name, artist.Id));
+            }
+        }
+    }
+}

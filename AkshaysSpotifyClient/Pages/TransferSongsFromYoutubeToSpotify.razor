@@ -1,19 +1,25 @@
-﻿@page "/Youtube/youtubeplaylists"
+﻿@page "/transfersongsfromyoutubetospotify"
 @using Newtonsoft.Json
 @using System.Net
-
+@using SpotifyApi.NetCore
+@inject NavigationManager navMgr
+@inject IUsersProfileApi usersApi
+@inject IPlaylistsApi playlistsApi
 <h3>YoutubeListPlaylists</h3>
-
-@if (myPlaylists?.Count > 0)
-{
-    foreach (MyPlaylist myPlaylist in myPlaylists)
+<table class="table table-dark">
+    @foreach (MyPlaylist myPlaylist in myPlaylists)
     {
-        <b> @myPlaylist.Title :: @myPlaylist.Count :: @myPlaylist.ID </b> <br />
+        <tr>
+            <td>
+                <AkshaysSpotifyClient.Components.YoutubePlaylist SingleYoutubePlaylist="@myPlaylist" SpotifyUserPlayLists="@userPlayLists" />
+            </td>
+        </tr>
     }
-}
+</table>
 @code {
-    List<MyPlaylist> myPlaylists { get; set; }
+    List<UserPlaylist> userPlayLists = new List<UserPlaylist>();
     string youtubeAccessToken;
+    List<MyPlaylist> myPlaylists = new List<MyPlaylist>();
     HttpClient httpClient = new HttpClient { BaseAddress = new Uri("https://localhost:44384/") };
 
     async Task<YoutubePlaylist> GetYoutubePlaylists<YoutubePlaylist>(string nextPageToken = null)
@@ -30,6 +36,14 @@
 
     protected override async Task OnInitializedAsync()
     {
+        User user = await usersApi.GetCurrentUsersProfile(Program.SpotifyAccessToken.access_token);
+        PlaylistsSearchResult playlistsSearchResult = await playlistsApi.GetPlaylists(user.Id, Program.SpotifyAccessToken.access_token);
+        foreach (PlaylistSimplified playlistSimplified in playlistsSearchResult.Items)
+        {
+            UserPlaylist userPlaylist = new UserPlaylist(playlistSimplified.Name, playlistSimplified.Tracks.Total, playlistSimplified.Id);
+            userPlayLists.Add(userPlaylist);
+        }
+
         if (!string.IsNullOrWhiteSpace(Program.GoogleApisYoutubeAccessToken?.access_token))
         {
             myPlaylists = new List<MyPlaylist>();
@@ -46,7 +60,7 @@
 
     async Task<string> AddMyPlaylist(string nextPageToken = null)
     {
-        YoutubePlaylist youtubePlaylist = await GetYoutubePlaylists<YoutubePlaylist>(nextPageToken);
+        MyYoutubePlaylist youtubePlaylist = await GetYoutubePlaylists<MyYoutubePlaylist>(nextPageToken);
         if (youtubePlaylist?.Items?.Length > 0)
         {
             foreach (Item item in youtubePlaylist.Items)

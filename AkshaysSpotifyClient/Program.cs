@@ -16,17 +16,17 @@ namespace AkshaysSpotifyClient
         public static SpotifyAccessToken SpotifyAccessToken;
         public static GoogleApisYoutubeAccessToken GoogleApisYoutubeAccessToken;
         public static string GoogleApisApiKey = "Put GoogleApis Youtube Api Key string in here";
-        public static string BaseHostUriString;
+        public static int DivIndex = 0;
 
         public static async Task Main(string[] args)
         {
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("app");
-            BaseHostUriString = builder.HostEnvironment.BaseAddress;
-            builder.Services.AddSingleton(new HttpClient { BaseAddress = new Uri(BaseHostUriString) });
+            builder.Services.AddSingleton(new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
             builder.Services.AddSingleton(typeof(IPlaylistsApi), typeof(PlaylistsApi));
             builder.Services.AddSingleton(typeof(IUsersProfileApi), typeof(UsersProfileApi));
             builder.Services.AddSingleton(typeof(IFollowApi), typeof(FollowApi));
+            builder.Services.AddSingleton(typeof(ISearchApi), typeof(SearchApi));
 
             await builder.Build().RunAsync();
         }

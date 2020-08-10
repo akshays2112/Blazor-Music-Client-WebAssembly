@@ -122,7 +122,7 @@ namespace AkshaysSpotifyClient
         }
     }
 
-    public class YoutubePlaylist
+    public class MyYoutubePlaylist
     {
         [JsonProperty("kind")]
         public string Kind { get; set; }

@@ -1,0 +1,48 @@
+﻿@using SpotifyApi.NetCore
+@inject IPlaylistsApi playlistsApi
+@if (Track.Artists.Count > 0)
+{
+    <span title="Expand or Collapse">
+        <svg onclick="clickSvg('#@svgPathID')" width="34" height="34" transform="scale(0.735 0.735)" data-toggle="collapse" data-target="#@divID">
+            <circle cx="17" cy="17" r="15" stroke="white" stroke-width="4" fill="none" />
+            <path id="@svgPathID" d="M17 28 L8 18 L14 18 L14 8 L20 8 L20 18 L26 18 Z" fill="white" />
+            Sorry, your browser does not support inline SVG.
+        </svg>
+    </span>
+}
+Spotify Track Name :: @Track.Name
+<br />
+@foreach (UserPlaylist userPlaylist in SpotifyUserPlayLists)
+{
+    <button @onclick="@(() => AddTrack(userPlaylist))" class="btn btn-primary">@userPlaylist.Name</button>
+}
+@if (Track.Artists.Count > 0)
+{
+    <div id="@divID" class="collapse show" style="margin-left:60px;">
+        <table class="table table-dark">
+            @foreach (CustomTrack.CustomArtist customArtist in Track.Artists)
+            {
+                <tr>
+                    <td>
+                        Artist Name :: @customArtist.Name
+                    </td>
+                </tr>
+            }
+        </table>
+    </div>
+}
+@code {
+    [Parameter]
+    public CustomTrack Track { get; set; }
+
+    [Parameter]
+    public List<UserPlaylist> SpotifyUserPlayLists { get; set; }
+
+    string divID = $"divID{(Program.DivIndex++).ToString()}";
+    string svgPathID = $"svgPathID{(Program.DivIndex++).ToString()}";
+
+    void AddTrack(UserPlaylist userPlaylist)
+    {
+        playlistsApi.AddItemsToPlaylist(userPlaylist.Id, new string[] { $"spotify:track:{Track.ID}" }, accessToken: Program.SpotifyAccessToken.access_token);
+    }
+}
