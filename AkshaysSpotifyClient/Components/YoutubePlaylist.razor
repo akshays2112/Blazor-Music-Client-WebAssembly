@@ -47,10 +47,10 @@ Playlist Title :: @SingleYoutubePlaylist.Title
     [Parameter]
     public List<UserPlaylist> SpotifyUserPlayLists { get; set; }
 
-    HttpClient httpClient = new HttpClient { BaseAddress = new Uri("https://localhost:44384/") };
+    HttpClient httpClient = new HttpClient { BaseAddress = Globals.BaseAddress };
 
-    string divID = $"divID{(Program.DivIndex++).ToString()}";
-    string svgPathID = $"svgPathID{(Program.DivIndex++).ToString()}";
+    string divID = $"divID{(Globals.DivIndex++).ToString()}";
+    string svgPathID = $"svgPathID{(Globals.DivIndex++).ToString()}";
 
     async Task<MyYoutubePlaylist> GetYoutubePlaylists<MyYoutubePlaylist>(string nextPageToken = null)
     {
@@ -81,10 +81,10 @@ Playlist Title :: @SingleYoutubePlaylist.Title
 
     async Task LoadYoutubePlaylistItems()
     {
-        if (!string.IsNullOrWhiteSpace(Program.GoogleApisYoutubeAccessToken?.access_token))
+        if (!string.IsNullOrWhiteSpace(Globals.GoogleApisYoutubeAccessToken?.access_token))
         {
             SingleYoutubePlaylist.MyPlayListItems = new List<MyPlaylist.MyPlayListItem>();
-            youtubeAccessToken = Program.GoogleApisYoutubeAccessToken.access_token;
+            youtubeAccessToken = Globals.GoogleApisYoutubeAccessToken.access_token;
             string nextPageToken = await AddMyPlaylistItems();
             while (!string.IsNullOrWhiteSpace(nextPageToken))
             {

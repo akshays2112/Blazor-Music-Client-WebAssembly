@@ -46,13 +46,13 @@ Youtube Video Title :: @YoutubePlaylistItem.Title
 
     List<CustomTrack> searchTracks = new List<CustomTrack>();
 
-    string divID = $"divID{(Program.DivIndex++).ToString()}";
-    string svgPathID = $"svgPathID{(Program.DivIndex++).ToString()}";
+    string divID = $"divID{(Globals.DivIndex++).ToString()}";
+    string svgPathID = $"svgPathID{(Globals.DivIndex++).ToString()}";
 
     async Task SearchSpotifyByTitle()
     {
         searchTracks.Clear();
-        SearchResult searchResult = await searchApi.Search(YoutubePlaylistItem.CleanedUpTitle, "track", "US", 50, 0, Program.SpotifyAccessToken.access_token);
+        SearchResult searchResult = await searchApi.Search(YoutubePlaylistItem.CleanedUpTitle, "track", "US", 50, 0, Globals.SpotifyAccessToken.access_token);
         foreach (Track track in searchResult.Tracks.Items)
         {
             CustomTrack customTrack = new CustomTrack(track.Name, track.Id);

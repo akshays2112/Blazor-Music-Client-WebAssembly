@@ -20,7 +20,7 @@
     List<UserPlaylist> userPlayLists = new List<UserPlaylist>();
     string youtubeAccessToken;
     List<MyPlaylist> myPlaylists = new List<MyPlaylist>();
-    HttpClient httpClient = new HttpClient { BaseAddress = new Uri("https://localhost:44384/") };
+    HttpClient httpClient = new HttpClient { BaseAddress = Globals.BaseAddress };
 
     async Task<YoutubePlaylist> GetYoutubePlaylists<YoutubePlaylist>(string nextPageToken = null)
     {
@@ -36,18 +36,18 @@
 
     protected override async Task OnInitializedAsync()
     {
-        User user = await usersApi.GetCurrentUsersProfile(Program.SpotifyAccessToken.access_token);
-        PlaylistsSearchResult playlistsSearchResult = await playlistsApi.GetPlaylists(user.Id, Program.SpotifyAccessToken.access_token);
+        User user = await usersApi.GetCurrentUsersProfile(Globals.SpotifyAccessToken.access_token);
+        PlaylistsSearchResult playlistsSearchResult = await playlistsApi.GetPlaylists(user.Id, Globals.SpotifyAccessToken.access_token);
         foreach (PlaylistSimplified playlistSimplified in playlistsSearchResult.Items)
         {
             UserPlaylist userPlaylist = new UserPlaylist(playlistSimplified.Name, playlistSimplified.Tracks.Total, playlistSimplified.Id);
             userPlayLists.Add(userPlaylist);
         }
 
-        if (!string.IsNullOrWhiteSpace(Program.GoogleApisYoutubeAccessToken?.access_token))
+        if (!string.IsNullOrWhiteSpace(Globals.GoogleApisYoutubeAccessToken?.access_token))
         {
             myPlaylists = new List<MyPlaylist>();
-            youtubeAccessToken = Program.GoogleApisYoutubeAccessToken.access_token;
+            youtubeAccessToken = Globals.GoogleApisYoutubeAccessToken.access_token;
             string nextPageToken = await AddMyPlaylist();
             while (!string.IsNullOrWhiteSpace(nextPageToken))
             {

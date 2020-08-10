@@ -38,11 +38,11 @@ Spotify Track Name :: @Track.Name
     [Parameter]
     public List<UserPlaylist> SpotifyUserPlayLists { get; set; }
 
-    string divID = $"divID{(Program.DivIndex++).ToString()}";
-    string svgPathID = $"svgPathID{(Program.DivIndex++).ToString()}";
+    string divID = $"divID{(Globals.DivIndex++).ToString()}";
+    string svgPathID = $"svgPathID{(Globals.DivIndex++).ToString()}";
 
     void AddTrack(UserPlaylist userPlaylist)
     {
-        playlistsApi.AddItemsToPlaylist(userPlaylist.Id, new string[] { $"spotify:track:{Track.ID}" }, accessToken: Program.SpotifyAccessToken.access_token);
+        playlistsApi.AddItemsToPlaylist(userPlaylist.Id, new string[] { $"spotify:track:{Track.ID}" }, accessToken: Globals.SpotifyAccessToken.access_token);
     }
 }
