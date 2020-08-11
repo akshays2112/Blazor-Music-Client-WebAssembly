@@ -9,11 +9,11 @@ namespace AkshaysSpotifyClient
     {
         public static SpotifyAccessToken SpotifyAccessToken;
         public static GoogleApisYoutubeAccessToken GoogleApisYoutubeAccessToken;
-        public static string GoogleApisYoutubeClientId = "Put your Google Apis Youtube Client ID here.";
+        public static string GoogleApisYoutubeClientId = "Your Google Apis Youtube Client Id.";
         public static int DivIndex = 0;
         public static Uri BaseAddress;
-        public static string SpotifyClientId = "Put your Spotify Client ID here.";
-        public static string SpotifyClientSecret = "Put your Spotify Client Secret here.";
+        public static string SpotifyClientId = "Your Spotify Client Id";
+        public static string SpotifyClientSecret = "Your Spotify Client Secret";
     }
 
     public class SpotifyAccessToken
