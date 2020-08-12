@@ -12,8 +12,8 @@ namespace AkshaysSpotifyClient
         public static string GoogleApisYoutubeClientId = "Your Google Apis Youtube Client Id.";
         public static int DivIndex = 0;
         public static Uri BaseAddress;
-        public static string SpotifyClientId = "Your Spotify Client Id";
-        public static string SpotifyClientSecret = "Your Spotify Client Secret";
+        public static string SpotifyClientId = "Your Spotify Client Id.";
+        public static string SpotifyClientSecret = "Your Spotify Client Secret.";
     }
 
     public class SpotifyAccessToken

@@ -10,12 +10,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Build" Version="3.2.1" PrivateAssets="all" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="3.2.1" PrivateAssets="all" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="SpotifyApi.NetCore">
-      <HintPath>..\..\SpotifyApi.NetCore\src\SpotifyApi.NetCore\bin\Debug\netstandard2.0\SpotifyApi.NetCore.dll</HintPath>
-    </Reference>
+    <PackageReference Include="SpotifyApi.NetCore" Version="3.5.0" />
   </ItemGroup>
 
 </Project>
