@@ -1,6 +1,6 @@
 # BlazorWebassemblySpotifyAndYoutube
 
-![Version](0.1.0)
+![Version](0.1.0)]
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](#)
 [![Twitter: VladoDev](https://img.shields.io/twitter/follow/AkshayS84661920.svg?style=social)](https://twitter.com/AkshayS84661920)
 
