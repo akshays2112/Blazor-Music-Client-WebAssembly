@@ -1,4 +1,4 @@
-![Alt text](https://raw.githubusercontent.com/akshays2112/BlazorWebassemblySpotifyAndYoutube/master/Images/BlazorMusicClient.png "Blazor Music Client")
+![Alt text](https://raw.githubusercontent.com/akshays2112/BlazorWebassemblySpotifyAndYoutube/master/Images/BlazorMusicClient.png?raw=true "Blazor Music Client")
 # BlazorWebassemblySpotifyAndYoutube
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](#)
