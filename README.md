@@ -32,7 +32,7 @@ Next upcoming features:
 Before you run the solution you need to create a Spotify API and GoogleApis Youtube Apps and provide the ClientID, ClientSecret, etc. All of these are strings that go in the Globals class properties.
 
 Detailed instructions with screenshots will be provided for how to:
-1) Create a Spotify API App in Spotify Developer Portal and get the Client ID and Client Secret.
+1) Create a Spotify API App in Spotify Developer Portal and get the Client ID and Client Secret. [Spotify Instructions](https://www.codeproject.com/Tips/5276627/HowTo-Setup-a-Spotify-API-App-in-the-Spotify-Devel)
 2) Create a Google Apis Youtube App in the Google Apis Developer Portal and get the Client ID.
 3) How to setup all this and the code in Visual Studio Community Edition 2019 (this is what I use).
 
