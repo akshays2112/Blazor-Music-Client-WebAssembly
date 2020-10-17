@@ -1,11 +1,34 @@
 ﻿@using SpotifyApi.NetCore
 @inject IPlaylistsApi playlistsApi
+@inject IPlayerApi playerApi
 @if (Track.Artists.Count > 0)
 {
     <span title="Expand or Collapse">
         <svg onclick="clickSvg('#@svgPathID')" width="34" height="34" transform="scale(0.735 0.735)" data-toggle="collapse" data-target="#@divID">
             <circle cx="17" cy="17" r="15" stroke="white" stroke-width="4" fill="none" />
             <path id="@svgPathID" d="M 17,6 8,16 h 6 v 10 h 6 V 16 h 6 z" fill="white" />
+            Sorry, your browser does not support inline SVG.
+        </svg>
+    </span>
+}
+@if (!IsPlaying)
+{
+    <span title="Play Track">
+        <svg @onclick="@PlayTrack" width="34" height="34">
+            <circle style="fill:#35b44b;fill-rule:evenodd;" id="path10" cx="17" cy="17" r="17" />
+            <path style="fill:none;stroke:#FFFFFF;stroke-width:4px;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+                  d="M 12,10 V 24 L 26,17 Z" id="path12" />
+            Sorry, your browser does not support inline SVG.
+        </svg>
+    </span>
+}
+else
+{
+    <span title="Play Track">
+        <svg @onclick="@PauseTrack" width="34" height="34">
+            <circle style="fill:#35b44b;fill-rule:evenodd;" id="path10" cx="17" cy="17" r="17" />
+            <path style="fill:none;stroke:#FFFFFF;stroke-width:4px;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+                  d="M 13,10 V 24 M 21,10 V 24 Z" id="path12" />
             Sorry, your browser does not support inline SVG.
         </svg>
     </span>
@@ -38,11 +61,37 @@ Spotify Track Name :: @Track.Name
     [Parameter]
     public List<UserPlaylist> SpotifyUserPlayLists { get; set; }
 
+    [Parameter]
+    public bool IsPlaying { get; set; }
+
     string divID = $"divID{(Globals.DivIndex++).ToString()}";
     string svgPathID = $"svgPathID{(Globals.DivIndex++).ToString()}";
+
+    long pausedAtProgessMs = 0;
 
     void AddTrack(UserPlaylist userPlaylist)
     {
         playlistsApi.AddItemsToPlaylist(userPlaylist.Id, new string[] { $"spotify:track:{Track.ID}" }, accessToken: Globals.SpotifyAccessToken.access_token);
+    }
+
+    async Task PlayTrack()
+    {
+        await playerApi.PlayTracks(Track.ID, accessToken: Globals.SpotifyAccessToken.access_token);
+        IsPlaying = true;
+    }
+
+    async Task PauseTrack()
+    {
+        CurrentPlaybackContext ctx = await playerApi.GetCurrentPlaybackInfo(Globals.SpotifyAccessToken.access_token);
+        if (ctx.IsPlaying)
+        {
+            pausedAtProgessMs = ctx.ProgressMs ?? 0;
+            await playerApi.Pause(Globals.SpotifyAccessToken.access_token);
+            IsPlaying = false;
+        }
+        else
+        {
+            await PlayTrack();
+        }
     }
 }
