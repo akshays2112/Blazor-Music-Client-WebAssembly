@@ -13,6 +13,9 @@ The purpose of Spotify is for audio only. The purpose for Youtube Music Vides is
 ## Blazor Music Client is not meant ever to replace Spotify and Youtube clients or mechanisms to consume music. It is only meant to augment features that are missing.
 
 The following are implemented:
+
+New: Play/Pause functionality. Why this is important is that with Spotify Client open you can see the results for a track search match with a play/pause button next to it which allows you to play the track and select which one you want to add to your Spotify Playlist. Given that each song can have multiple different mixes, remasters, etc.
+
 1) List all your Youtube Playlists.
 2) Upon clicking a Youtube Playlists all the Videos in it are listed.
 3) The processed title of the Youtube Video is then available in a textbox for editing.
